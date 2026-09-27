@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>NEO</title>
+  <title>NeoDuo</title>
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="partner.css" />
 </head>
 <body>
   <!-- Draggable strip so the frameless window can be moved -->
@@ -12,7 +13,7 @@
   <!-- ======================= BOOKSHELF ======================= -->
   <div id="bookshelf-view">
     <header id="shelf-header">
-      <h1>NEO</h1>
+      <h1>NeoDuo</h1>
       <div class="shelf-header-right">
         <span id="author-chip" title="Click to change your author name"></span>
         <button id="import-btn" title="Import .docx, .txt, or .md manuscripts">&#8681; Import</button>
@@ -26,8 +27,8 @@
   <div id="firstrun" class="modal-backdrop" hidden>
     <div class="modal">
       <div id="fr-step1">
-        <h2>Welcome to NEO</h2>
-        <p>NEO knows you're writing books. A few quick questions and it will never ask anything again.</p>
+        <h2>Welcome to NeoDuo</h2>
+        <p>NeoDuo knows you're writing books. A few quick questions and it will never ask anything again.</p>
         <label>Your name <span class="soft">(appears as the author on every document — leave blank for “Anonymous”)</span>
           <input id="fr-name" type="text" autocomplete="off" spellcheck="false" />
         </label>
@@ -85,6 +86,25 @@
       <div id="sticky-list"></div>
     </aside>
 
+    <button id="partner-toggle" aria-controls="partner-panel" aria-expanded="false">✧ Partner</button>
+    <aside id="partner-panel" aria-label="Creative partner" hidden>
+      <header class="partner-header"><div><h2>Partner</h2><p>A little room for possibilities.</p></div><button id="partner-close" aria-label="Close partner">×</button></header>
+      <div class="partner-account"><span id="partner-account-label">Connect when you’re ready.</span><button id="partner-login">Sign in with ChatGPT</button><button id="partner-logout" hidden>Sign out</button></div>
+      <p id="partner-status" role="status" aria-live="polite"></p>
+      <div id="partner-messages" role="log" aria-label="Conversation" aria-live="off"></div>
+      <form id="partner-form">
+        <details id="partner-context"><summary>Share with your partner</summary>
+          <p>Your messages and chosen context are sent to OpenAI. Earlier shared context remains in this conversation.</p>
+          <label><input type="checkbox" id="partner-outline"> Outline</label>
+          <label><input type="checkbox" id="partner-chapter"> Current chapter</label>
+          <button type="button" id="partner-preview">Preview context</button><pre id="partner-context-preview" hidden></pre>
+        </details>
+        <label for="partner-input" class="partner-prompt-label">What’s on your mind?</label>
+        <textarea id="partner-input" rows="3" maxlength="16000" placeholder="A character, a possibility, a knot to untangle…"></textarea>
+        <div class="partner-compose-actions"><span>Conversation only · your words stay yours</span><button type="button" id="partner-stop" hidden>Stop</button><button type="submit" id="partner-send">Send</button></div>
+      </form>
+    </aside>
+
     <!-- The manuscript -->
     <main id="paper-scroll">
       <div id="paper">
@@ -140,5 +160,6 @@
 
   <script src="covers.js"></script>
   <script src="app.js"></script>
+  <script src="partner-ui.js"></script>
 </body>
 </html>

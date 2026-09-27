@@ -46,3 +46,17 @@ contextBridge.exposeInMainWorld('neo', {
   poetryState: (on) => ipcRenderer.send('poetry:state', on),
   onMenu: (cb) => ipcRenderer.on('menu', (_e, msg) => cb(msg))
 });
+
+contextBridge.exposeInMainWorld('partner', {
+  account: () => ipcRenderer.invoke('partner:account'),
+  login: () => ipcRenderer.invoke('partner:login'),
+  logout: () => ipcRenderer.invoke('partner:logout'),
+  history: bookId => ipcRenderer.invoke('partner:history', bookId),
+  send: payload => ipcRenderer.invoke('partner:send', payload),
+  cancel: bookId => ipcRenderer.invoke('partner:cancel', bookId),
+  onEvent: callback => {
+    const listener = (_event, payload) => callback(payload);
+    ipcRenderer.on('partner:event', listener);
+    return () => ipcRenderer.removeListener('partner:event', listener);
+  }
+});

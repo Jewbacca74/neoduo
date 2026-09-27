@@ -865,6 +865,7 @@ async function openBook(bookId) {
   tabPlaces = {}; // a fresh book starts with fresh places
   book = await window.neo.readBookMeta(bookId);
   if (!book) return;
+  window.dispatchEvent(new CustomEvent('partner:book', { detail: { bookId } }));
   currentChapterId = null; // never carry a chapter reference across books
   undoStack = [];
   chapterHTML = {};
@@ -2595,6 +2596,7 @@ function switchTab(name) {
       : { scroll: scroller.scrollTop };
   }
   currentTab = name;
+  window.dispatchEvent(new CustomEvent('partner:tab', { detail: { tab: name } }));
   $$('.tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === name));
   if (spellOn) setTimeout(scanSpellingHere, 0);
   const paper = $('#paper');
@@ -3166,6 +3168,7 @@ async function backToShelf() {
   flushAllSaves();
   tabPlaces = {};
   book = null;
+  window.dispatchEvent(new CustomEvent('partner:book', { detail: { bookId: null } }));
   currentChapterId = null;
   undoStack = [];
   $('#editor-view').hidden = true;
@@ -5028,3 +5031,22 @@ loadLibrary().then(() => {
   typewriterEnabled = !!library.typewriter;
   applyTypewriter();
 });
+
+// Read-only snapshots of the live editor, including unsaved outline changes.
+window.neoPartnerContext = (includeOutline, includeChapter) => {
+  if (!book) return '';
+  const context = { title: book.title };
+  if (includeOutline) context.outline = book.chapterOrder.map(id => ({
+    title: (book.chapterTitles || {})[id] || 'Untitled chapter',
+    note: (book.chapterNotes || {})[id] || '',
+    sections: (book.sectionNotes || {})[id] || []
+  }));
+  if (includeChapter) {
+    const id = currentChapterId;
+    if (id) {
+      const el = [...document.querySelectorAll('.chapter')].find(el => el.dataset.id === id);
+      context.chapter = { title: (book.chapterTitles || {})[id] || 'Untitled chapter', text: el?.querySelector('.chapter-body')?.innerText || '' };
+    } else context.chapter = 'No current chapter selected.';
+  }
+  return JSON.stringify(context, null, 2);
+};
