@@ -1,5 +1,10 @@
 #partner-toggle { position: absolute; top: 38px; right: 24px; z-index: 90; background: var(--pane); border: 1px solid #494131; border-radius: 20px; padding: 9px 16px; color: var(--accent); font-size: 13px; }
-#partner-panel { position: absolute; top: 28px; bottom: 40px; right: 0; width: 360px; z-index: 95; background: var(--pane); border-left: 1px solid #39352e; display: flex; flex-direction: column; color: #dedbd4; box-shadow: -8px 0 32px #0002; }
+#partner-panel { position: absolute; top: 28px; bottom: 40px; right: 0; width: var(--partner-width, 360px); z-index: 95; background: var(--pane); border-left: 1px solid #39352e; display: flex; flex-direction: column; color: #dedbd4; box-shadow: -8px 0 32px #0002; }
+#partner-resize { position: absolute; left: -5px; top: 0; bottom: 0; width: 10px; cursor: col-resize; touch-action: none; z-index: 1; }
+#partner-resize::after { content: ''; position: absolute; left: 4px; top: 0; bottom: 0; width: 2px; background: transparent; }
+#partner-resize:hover::after, #partner-resize:focus-visible::after, .partner-resizing #partner-resize::after { background: var(--accent); }
+#partner-resize:focus-visible { outline: 1px solid var(--accent); }
+body.partner-resizing, body.partner-resizing * { cursor: col-resize !important; user-select: none !important; }
 .partner-header { display: flex; align-items: start; justify-content: space-between; padding: 22px 20px 16px; }
 .partner-header h2 { font-family: Georgia, serif; font-size: 25px; font-weight: 400; color: var(--accent); }
 .partner-header p { margin-top: 5px; font-size: 12px; color: #aaa59b; }
@@ -61,11 +66,9 @@
 .partner-compose-actions { display: flex; gap: 8px; align-items: center; margin-top: 9px; }
 .partner-compose-actions span { flex: 1; font-size: 10px; color: #938e84; line-height: 1.4; }
 #partner-send { background: var(--accent) !important; color: #201b12 !important; }
-#editor-view.partner-open #paper-scroll { left: 0; transform: none; width: calc(100% - 360px); }
+#editor-view.partner-open #paper-scroll { left: 0; transform: none; width: calc(100% - var(--partner-width, 360px)); }
 #editor-view.partner-open #side-pane, #editor-view.partner-open #side-hotzone { display: none; }
 @media (max-width: 950px) {
-  #partner-panel { width: 320px; }
-  #editor-view.partner-open #paper-scroll { width: calc(100% - 320px); }
   #bottombar { gap: 8px; }
   .tab { padding: 5px 8px; }
   #counters { gap: 8px; }

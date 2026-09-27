@@ -31,6 +31,11 @@ Enter and Shift+Enter insert a newline. Stop interrupts a reply.
 The panel can be closed without cancelling a response. Switching books keeps
 histories separate; this prototype permits one active response at a time.
 
+Drag the Partner panel’s left edge to resize it. Its width is remembered on this
+computer across books and restarts, and adjusts to fit smaller windows. Double-click
+the edge to reset it. You can also focus the divider with Tab and use Left/Right
+arrow keys (Shift for larger steps), or Home/End for the minimum/maximum width.
+
 The panel’s **Book memory** button opens an editor for a summary, confirmed story
 decisions, and open questions. These Markdown notes are read fresh and attached
 automatically to every message, including after restarting the app. The panel

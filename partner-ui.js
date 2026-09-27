@@ -15,6 +15,71 @@
   let hasHistory = false;
   let draftPending = null;
 
+  const resizeHandle = $('partner-resize');
+  const widthKey = 'neoduo.partnerWidth';
+  let preferredWidth = 360;
+  let resizePointer = null;
+  try {
+    const saved = Number(localStorage.getItem(widthKey));
+    if (Number.isFinite(saved) && saved > 0) preferredWidth = saved;
+  } catch { /* Resizing still works when preference storage is unavailable. */ }
+  function widthLimits() {
+    const available = $('editor-view').clientWidth || window.innerWidth;
+    return { min: Math.min(300, available), max: Math.min(900, Math.max(300, available - 420), available) };
+  }
+  function applyWidth() {
+    const { min, max } = widthLimits();
+    const width = Math.round(Math.max(min, Math.min(max, preferredWidth)));
+    $('editor-view').style.setProperty('--partner-width', width + 'px');
+    resizeHandle.setAttribute('aria-valuemin', min);
+    resizeHandle.setAttribute('aria-valuemax', max);
+    resizeHandle.setAttribute('aria-valuenow', width);
+    resizeHandle.setAttribute('aria-valuetext', width + ' pixels');
+    return width;
+  }
+  function setWidth(width) {
+    const { min, max } = widthLimits();
+    preferredWidth = Math.round(Math.max(min, Math.min(max, width)));
+    applyWidth();
+  }
+  function saveWidth() {
+    try { localStorage.setItem(widthKey, String(preferredWidth)); } catch { /* Optional preference. */ }
+  }
+  function endResize() {
+    resizePointer = null;
+    document.body.classList.remove('partner-resizing');
+    saveWidth();
+  }
+  resizeHandle.addEventListener('pointerdown', event => {
+    if (event.button !== 0 || resizePointer !== null) return;
+    event.preventDefault();
+    resizePointer = event.pointerId;
+    resizeHandle.setPointerCapture(event.pointerId);
+    resizeHandle.focus();
+    document.body.classList.add('partner-resizing');
+  });
+  resizeHandle.addEventListener('pointermove', event => {
+    if (event.pointerId === resizePointer) setWidth($('partner-panel').getBoundingClientRect().right - event.clientX);
+  });
+  resizeHandle.addEventListener('pointerup', event => {
+    if (event.pointerId !== resizePointer) return;
+    resizeHandle.releasePointerCapture(event.pointerId);
+    endResize();
+  });
+  resizeHandle.addEventListener('pointercancel', endResize);
+  resizeHandle.addEventListener('lostpointercapture', endResize);
+  resizeHandle.addEventListener('dblclick', () => { setWidth(360); saveWidth(); });
+  resizeHandle.addEventListener('keydown', event => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+    const { min, max } = widthLimits();
+    const step = event.shiftKey ? 50 : 20;
+    setWidth(event.key === 'Home' ? min : event.key === 'End' ? max : applyWidth() + (event.key === 'ArrowLeft' ? step : -step));
+    saveWidth();
+  });
+  window.addEventListener('resize', applyWidth);
+  applyWidth();
+
   function memoryDirty() {
     return memoryEditor && ['summary', 'decisions', 'questions'].some(key => $('memory-' + key).value !== memoryEditor.notes[key]);
   }
@@ -38,6 +103,7 @@
     $('partner-toggle').hidden = !available;
     $('partner-panel').hidden = !opened || !available;
     $('editor-view').classList.toggle('partner-open', opened && available);
+    if (opened && available) applyWidth();
     $('partner-toggle').setAttribute('aria-expanded', String(opened && available));
     $('partner-send').disabled = !signedIn || busy || sending || loading || otherBusy || !$('partner-input').value.trim();
     $('partner-stop').hidden = !busy && !sending;
