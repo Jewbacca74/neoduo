@@ -4,6 +4,8 @@
 
 const { app, BrowserWindow, ipcMain, dialog, Menu, MenuItem, utilityProcess } = require('electron');
 const path = require('path');
+app.setName('NeoDuo');
+if (process.env.NEODUO_DATA_DIR) app.setPath('userData', process.env.NEODUO_DATA_DIR);
 const fs = require('fs');
 const os = require('os');
 
@@ -16,7 +18,7 @@ app.commandLine.appendSwitch('blink-settings', 'smartInsertDeleteEnabled=false')
 // ---------------------------------------------------------------------------
 // Resolved properly at startup via app.getPath('documents') — this default
 // covers any early access and non-redirected setups.
-let LIBRARY_DIR = path.join(os.homedir(), 'Documents', 'NEO Library');
+let LIBRARY_DIR = path.join(os.homedir(), 'Documents', 'NeoDuo Library');
 let LIBRARY_FILE = path.join(LIBRARY_DIR, 'library.json');
 
 // NEO's few app-level settings (today: a custom library folder) live in the
@@ -35,7 +37,7 @@ function writeSettings(obj) {
 // The library is plain files, so the writer moves them; NEO only follows.
 async function chooseLibraryFolder() {
   const win = BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];
-  const defaultDir = path.join(app.getPath('documents'), 'NEO Library');
+  const defaultDir = path.join(app.getPath('documents'), 'NeoDuo Library');
   const custom = LIBRARY_DIR !== defaultDir;
   const ask = await dialog.showMessageBox(win, {
     type: 'question',
@@ -1071,13 +1073,13 @@ function buildMenu() {
       label: 'Help',
       submenu: [
         {
-          label: 'NEO Shortcuts',
+          label: 'NeoDuo Shortcuts',
           accelerator: 'CmdOrCtrl+/',
           click: () => sendToWindow({ type: 'help' })
         },
         { type: 'separator' },
         {
-          label: 'About NEO',
+          label: 'About NeoDuo',
           click: () => sendToWindow({ type: 'about' })
         },
         {
@@ -1110,7 +1112,7 @@ ipcMain.handle('app:version', () => app.getVersion());
 
 ipcMain.handle('update:check', async () => {
   try {
-    const res = await fetch('https://api.github.com/repos/hughhowey/neo/releases/latest', {
+    const res = await fetch('https://api.github.com/repos/Jewbacca74/neoduo/releases/latest', {
       headers: { 'User-Agent': 'NEO-App' }
     });
     if (!res.ok) throw new Error('GitHub API returned ' + res.status);
@@ -1172,7 +1174,7 @@ app.whenReady().then(() => {
     if (process.platform === 'darwin' && fs.existsSync(devIcon)) {
       if (app.dock) app.dock.setIcon(devIcon);
       app.setAboutPanelOptions({
-        applicationName: 'NEO',
+        applicationName: 'NeoDuo',
         applicationVersion: app.getVersion(),
         iconPath: devIcon
       });
@@ -1184,7 +1186,7 @@ app.whenReady().then(() => {
   try {
     // the real Documents folder (handles OneDrive-redirected Windows setups)
     try {
-      LIBRARY_DIR = path.join(app.getPath('documents'), 'NEO Library');
+      LIBRARY_DIR = path.join(app.getPath('documents'), 'NeoDuo Library');
       // …unless the writer chose their own folder (File → Library Folder…)
       const chosen = readSettings().libraryDir;
       if (chosen && fs.existsSync(chosen) && fs.statSync(chosen).isDirectory()) LIBRARY_DIR = chosen;
@@ -1214,13 +1216,13 @@ app.whenReady().then(() => {
     try { initSpell(); } catch (err) { logError('spell', err); }
     try { buildMenu(); } catch (err) { logError('menu', err); }
     try { dailyBackup(); } catch (err) { logError('backup', err); }
-    try { checkForUpdates(); } catch (err) { logError('updater', err); }
+    try { if (process.platform !== 'linux' || process.env.APPIMAGE) checkForUpdates(); } catch (err) { logError('updater', err); }
   } catch (err) {
     // catastrophic: tell the human instead of dying in silence
     logError('startup', err);
     try {
-      dialog.showErrorBox('NEO failed to start',
-        'Please report this at github.com/hughhowey/neo/issues:\n\n' + String((err && err.stack) || err));
+      dialog.showErrorBox('NeoDuo failed to start',
+        'Please report this at github.com/Jewbacca74/neoduo/issues:\n\n' + String((err && err.stack) || err));
     } catch { /* nothing left to try */ }
   }
   app.on('activate', () => {
@@ -1231,3 +1233,40 @@ app.whenReady().then(() => {
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
+
+// NeoDuo's conversation partner owns its own authentication and history.
+const { PartnerService } = require('./partner-service');
+let partner;
+function getPartner() {
+  if (!partner) {
+    partner = new PartnerService({
+      home: path.join(app.getPath('userData'), 'partner-codex'),
+      libraryDir: () => LIBRARY_DIR,
+      openExternal: url => require('electron').shell.openExternal(url)
+    });
+    partner.on('event', event => {
+      for (const win of BrowserWindow.getAllWindows()) {
+        if (!win.isDestroyed()) win.webContents.send('partner:event', event);
+      }
+    });
+  }
+  return partner;
+}
+for (const [channel, action] of Object.entries({
+  account: () => getPartner().account(),
+  login: () => getPartner().login(),
+  logout: () => getPartner().logout(),
+  history: bookId => getPartner().snapshot(bookId),
+  memory: bookId => getPartner().readMemory(bookId),
+  saveMemory: payload => getPartner().writeMemory(payload),
+  summarize: bookId => getPartner().summarize(bookId),
+  send: payload => getPartner().send(payload),
+  cancel: bookId => getPartner().cancel(bookId)
+})) {
+  ipcMain.handle('partner:' + channel, async (event, payload) => {
+    if (event.senderFrame !== event.sender.mainFrame) return { error: 'Unsupported caller.' };
+    try { return { result: await action(payload) }; }
+    catch (error) { return { error: error.message }; }
+  });
+}
+app.on('before-quit', () => partner?.stop());

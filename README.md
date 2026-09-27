@@ -1,3 +1,15 @@
+# NeoDuo
+
+An independent fork of [NEO](https://github.com/hughhowey/neo), adding a creative
+conversation partner to Outline and Manuscript. The first prototype supports
+ChatGPT browser sign-in through Codex App Server and saves conversations per book.
+
+See [the partner guide](docs/partner.md) for setup, context sharing, and current limits.
+
+The original NEO documentation follows; its release links refer to upstream.
+
+---
+
 # NEO
 
 **A distraction-free word processor for authors, by a wannabe author.**

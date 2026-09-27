@@ -1,24 +1,25 @@
 {
-  "name": "neo",
-  "productName": "NEO",
+  "name": "neoduo",
+  "productName": "NeoDuo",
   "version": "0.8.1",
   "description": "A word processor for authors. Distraction-free by default.",
-  "homepage": "https://github.com/hughhowey/neo",
+  "homepage": "https://github.com/Jewbacca74/neoduo",
   "main": "main.js",
   "scripts": {
-    "start": "electron .",
+    "start": "node scripts/dev.cjs",
     "package": "electron-builder --mac",
     "package:win": "electron-builder --win",
     "package:linux": "electron-builder --linux",
-    "package:all": "electron-builder --mac --win --linux"
+    "package:all": "electron-builder --mac --win --linux",
+    "test": "node --test test/*.test.js"
   },
   "build": {
-    "appId": "com.hughhowey.neo",
-    "productName": "NEO",
+    "appId": "com.jewbacca74.neoduo",
+    "productName": "NeoDuo",
     "publish": {
       "provider": "github",
-      "owner": "hughhowey",
-      "repo": "neo"
+      "owner": "Jewbacca74",
+      "repo": "neoduo"
     },
     "mac": {
       "category": "public.app-category.productivity",
@@ -78,7 +79,7 @@
           "Keywords": "writing;writer;novel;book;author;manuscript;wordprocessor;"
         }
       },
-      "maintainer": "Hugh Howey <hughhowey@gmail.com>"
+      "maintainer": "Jewbacca74"
     },
     "nsis": {
       "oneClick": true,
@@ -90,7 +91,9 @@
       "!dist/**",
       "!Backups/**",
       "!*.md",
-      "!.github/**"
+      "!.github/**",
+      "!test/**",
+      "!docs/**"
     ]
   },
   "author": "Hugh Howey",

@@ -759,16 +759,58 @@ async function refreshCover(meta, el) {
   dressTile(el, live);
 }
 
+function askWorkingTitle() {
+  return new Promise(resolve => {
+    const bd = document.createElement('div');
+    bd.className = 'modal-backdrop';
+    bd.innerHTML = `<form class="modal" role="dialog" aria-modal="true" aria-labelledby="new-book-heading" style="width:420px">
+      <h2 id="new-book-heading">A new book</h2>
+      <p>A working title is enough. You can change it on the manuscript’s title page anytime.</p>
+      <label for="new-book-title">Working title <span class="soft">(optional)</span></label>
+      <input id="new-book-title" type="text" maxlength="200" placeholder="What shall we call it for now?" autocomplete="off" />
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
+        <button type="button" class="m-cancel btn-quiet">Cancel</button>
+        <button type="button" id="new-book-later" class="btn-quiet">Decide later</button>
+        <button type="submit" class="btn-gold">Create book</button>
+      </div>
+    </form>`;
+    document.body.append(bd);
+    const input = bd.querySelector('input');
+    const finish = value => { bd.remove(); resolve(value); };
+    bd.querySelector('form').onsubmit = event => { event.preventDefault(); finish(input.value.trim()); };
+    bd.querySelector('.m-cancel').onclick = () => finish(null);
+    bd.querySelector('#new-book-later').onclick = () => finish('');
+    bd.addEventListener('keydown', event => {
+      event.stopPropagation();
+      if (event.key === 'Escape') { event.preventDefault(); finish(null); }
+      if (event.key === 'Tab') {
+        const focusable = [...bd.querySelectorAll('input, button')];
+        const first = focusable[0], last = focusable.at(-1);
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+      }
+    });
+    input.focus();
+  });
+}
+
+let creatingBook = false;
 async function createBookOnShelf(shelf) {
-  const meta = await window.neo.createBook({ author: displayAuthor() });
-  meta.tabNames = {
-    notes: (library.tabDefaults && library.tabDefaults.notes) || 'Notes',
-    outline: (library.tabDefaults && library.tabDefaults.outline) || 'Outline'
-  };
-  await window.neo.writeBookMeta(meta.id, meta);
-  shelf.bookIds.push(meta.id);
-  await window.neo.writeLibrary(library);
-  openBook(meta.id);
+  if (creatingBook) return;
+  creatingBook = true;
+  try {
+    const title = await askWorkingTitle();
+    if (title === null) return;
+    const meta = await window.neo.createBook({ title, author: displayAuthor() });
+    meta.tabNames = {
+      notes: (library.tabDefaults && library.tabDefaults.notes) || 'Notes',
+      outline: (library.tabDefaults && library.tabDefaults.outline) || 'Outline'
+    };
+    await window.neo.writeBookMeta(meta.id, meta);
+    shelf.bookIds.push(meta.id);
+    await window.neo.writeLibrary(library);
+    await openBook(meta.id);
+  } finally { creatingBook = false; }
 }
 
 // While dragging a book or shelf, nearing the window's top or bottom edge
@@ -865,6 +907,7 @@ async function openBook(bookId) {
   tabPlaces = {}; // a fresh book starts with fresh places
   book = await window.neo.readBookMeta(bookId);
   if (!book) return;
+  window.dispatchEvent(new CustomEvent('partner:book', { detail: { bookId } }));
   currentChapterId = null; // never carry a chapter reference across books
   undoStack = [];
   chapterHTML = {};
@@ -2595,6 +2638,7 @@ function switchTab(name) {
       : { scroll: scroller.scrollTop };
   }
   currentTab = name;
+  window.dispatchEvent(new CustomEvent('partner:tab', { detail: { tab: name } }));
   $$('.tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === name));
   if (spellOn) setTimeout(scanSpellingHere, 0);
   const paper = $('#paper');
@@ -3166,6 +3210,7 @@ async function backToShelf() {
   flushAllSaves();
   tabPlaces = {};
   book = null;
+  window.dispatchEvent(new CustomEvent('partner:book', { detail: { bookId: null } }));
   currentChapterId = null;
   undoStack = [];
   $('#editor-view').hidden = true;
@@ -5028,3 +5073,22 @@ loadLibrary().then(() => {
   typewriterEnabled = !!library.typewriter;
   applyTypewriter();
 });
+
+// Read-only snapshots of the live editor, including unsaved outline changes.
+window.neoPartnerContext = (includeOutline, includeChapter) => {
+  if (!book) return '';
+  const context = { title: book.title };
+  if (includeOutline) context.outline = book.chapterOrder.map(id => ({
+    title: (book.chapterTitles || {})[id] || 'Untitled chapter',
+    note: (book.chapterNotes || {})[id] || '',
+    sections: (book.sectionNotes || {})[id] || []
+  }));
+  if (includeChapter) {
+    const id = currentChapterId;
+    if (id) {
+      const el = [...document.querySelectorAll('.chapter')].find(el => el.dataset.id === id);
+      context.chapter = { title: (book.chapterTitles || {})[id] || 'Untitled chapter', text: el?.querySelector('.chapter-body')?.innerText || '' };
+    } else context.chapter = 'No current chapter selected.';
+  }
+  return JSON.stringify(context, null, 2);
+};
