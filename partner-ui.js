@@ -244,6 +244,9 @@
   };
   // Keep editor shortcuts from interpreting conversation typing as manuscript commands.
   $('partner-panel').addEventListener('keydown', event => { event.stopPropagation(); });
+  // The editor forwards margin wheel events to manuscript scroll/zoom handlers.
+  // Keep native scrolling inside Partner without forwarding those gestures.
+  $('partner-panel').addEventListener('wheel', event => event.stopPropagation(), { passive: true });
   const sendShortcut = /Mac/i.test(navigator.platform) ? '⌘Enter' : 'Ctrl+Enter';
   $('partner-compose-hint').textContent = sendShortcut + ' to send · Enter for a new line';
   $('partner-send').title = 'Send (' + sendShortcut + ')';
