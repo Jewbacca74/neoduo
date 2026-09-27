@@ -1257,6 +1257,9 @@ for (const [channel, action] of Object.entries({
   login: () => getPartner().login(),
   logout: () => getPartner().logout(),
   history: bookId => getPartner().snapshot(bookId),
+  memory: bookId => getPartner().readMemory(bookId),
+  saveMemory: payload => getPartner().writeMemory(payload),
+  summarize: bookId => getPartner().summarize(bookId),
   send: payload => getPartner().send(payload),
   cancel: bookId => getPartner().cancel(bookId)
 })) {

@@ -52,6 +52,9 @@ contextBridge.exposeInMainWorld('partner', {
   login: () => ipcRenderer.invoke('partner:login'),
   logout: () => ipcRenderer.invoke('partner:logout'),
   history: bookId => ipcRenderer.invoke('partner:history', bookId),
+  memory: bookId => ipcRenderer.invoke('partner:memory', bookId),
+  saveMemory: payload => ipcRenderer.invoke('partner:saveMemory', payload),
+  summarize: bookId => ipcRenderer.invoke('partner:summarize', bookId),
   send: payload => ipcRenderer.invoke('partner:send', payload),
   cancel: bookId => ipcRenderer.invoke('partner:cancel', bookId),
   onEvent: callback => {

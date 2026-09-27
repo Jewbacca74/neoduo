@@ -91,6 +91,7 @@
       <header class="partner-header"><div><h2>Partner</h2><p>A little room for possibilities.</p></div><button id="partner-close" aria-label="Close partner">×</button></header>
       <div class="partner-account"><span id="partner-account-label">Connect when you’re ready.</span><button id="partner-login">Sign in with ChatGPT</button><button id="partner-logout" hidden>Sign out</button></div>
       <p id="partner-status" role="status" aria-live="polite"></p>
+      <div class="partner-memory-bar"><span id="partner-using">Book memory: empty</span><button id="partner-memory">Book memory</button></div>
       <div id="partner-messages" role="log" aria-label="Conversation" aria-live="off"></div>
       <form id="partner-form">
         <details id="partner-context"><summary>Share with your partner</summary>
@@ -156,6 +157,23 @@
   </div>
 
   <!-- Toast — lives at body level so it shows over both views -->
+  <dialog id="partner-memory-dialog" aria-labelledby="memory-heading">
+    <form method="dialog" id="partner-memory-form">
+      <header><div><h2 id="memory-heading">Book memory</h2><p>Saved as Markdown in this book’s partner folder. Included automatically with every message.</p></div><button type="button" id="memory-close" aria-label="Close book memory">×</button></header>
+      <p id="memory-status" role="status"></p>
+      <div class="memory-fields">
+        <label for="memory-summary">Summary <span>A recap to help pick up the thread.</span></label>
+        <textarea id="memory-summary" rows="5" maxlength="16000"></textarea>
+        <div class="memory-summary-actions"><button type="button" id="memory-generate">Draft summary from conversation</button><button type="button" id="memory-use-draft" hidden>Use draft in editor</button></div>
+        <details id="memory-draft-container" hidden><summary>Review AI summary draft</summary><pre id="memory-draft"></pre></details>
+        <label for="memory-decisions">Story decisions <span>Only what you have decided is true. Suggestions stay possibilities until you decide.</span></label>
+        <textarea id="memory-decisions" rows="5" maxlength="16000" placeholder="The setting, characters, or rules you have settled on…"></textarea>
+        <label for="memory-questions">Open questions <span>What you’re still exploring.</span></label>
+        <textarea id="memory-questions" rows="4" maxlength="16000" placeholder="Questions, alternatives, and ideas to revisit…"></textarea>
+      </div>
+      <footer><span>Earlier versions are kept locally.</span><button type="button" id="memory-cancel">Cancel</button><button type="submit" id="memory-save">Save memory</button></footer>
+    </form>
+  </dialog>
   <div id="hint" hidden></div>
 
   <script src="covers.js"></script>
