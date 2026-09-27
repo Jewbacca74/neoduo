@@ -101,8 +101,8 @@
           <button type="button" id="partner-preview">Preview context</button><pre id="partner-context-preview" hidden></pre>
         </details>
         <label for="partner-input" class="partner-prompt-label">What’s on your mind?</label>
-        <textarea id="partner-input" rows="3" maxlength="16000" placeholder="A character, a possibility, a knot to untangle…"></textarea>
-        <div class="partner-compose-actions"><span>Conversation only · your words stay yours</span><button type="button" id="partner-stop" hidden>Stop</button><button type="submit" id="partner-send">Send</button></div>
+        <textarea id="partner-input" rows="3" maxlength="16000" aria-describedby="partner-compose-hint" placeholder="A character, a possibility, a knot to untangle…"></textarea>
+        <div class="partner-compose-actions"><span id="partner-compose-hint">Ctrl+Enter to send · Enter for a new line</span><button type="button" id="partner-stop" hidden>Stop</button><button type="submit" id="partner-send">Send</button></div>
       </form>
     </aside>
 

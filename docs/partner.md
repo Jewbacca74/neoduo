@@ -26,7 +26,8 @@ apply. If Codex isn't on the desktop's PATH, launch with
 `NEODUO_CODEX_BIN=/absolute/path/to/codex npm start`.
 
 One saved conversation accompanies each book across Manuscript and Outline.
-Messages use a Send button; Enter remains a newline. Stop interrupts a reply.
+Send messages with **Ctrl+Enter** (**⌘Enter** on Mac) or the Send button.
+Enter and Shift+Enter insert a newline. Stop interrupts a reply.
 The panel can be closed without cancelling a response. Switching books keeps
 histories separate; this prototype permits one active response at a time.
 

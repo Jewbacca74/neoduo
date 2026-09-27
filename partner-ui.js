@@ -178,6 +178,16 @@
   };
   // Keep editor shortcuts from interpreting conversation typing as manuscript commands.
   $('partner-panel').addEventListener('keydown', event => { event.stopPropagation(); });
+  const sendShortcut = /Mac/i.test(navigator.platform) ? '⌘Enter' : 'Ctrl+Enter';
+  $('partner-compose-hint').textContent = sendShortcut + ' to send · Enter for a new line';
+  $('partner-send').title = 'Send (' + sendShortcut + ')';
+  $('partner-input').addEventListener('keydown', event => {
+    if (event.key !== 'Enter' || !(event.ctrlKey || event.metaKey) || event.shiftKey || event.altKey || event.isComposing) return;
+    event.preventDefault();
+    if (!event.repeat && !$('partner-send').disabled) {
+      $('partner-form').requestSubmit($('partner-send'));
+    }
+  });
   $('partner-preview').onclick = async () => {
     const pre = $('partner-context-preview');
     pre.hidden = !pre.hidden;
